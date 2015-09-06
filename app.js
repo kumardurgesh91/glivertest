@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(orm.express("mysql://root:@localhost/hardik", {
+app.use(orm.express("mysql://root:@localhost/glivertest", {
     define: function (db, models, next) {
         models.users = db.define("users", {
             email      : String,
