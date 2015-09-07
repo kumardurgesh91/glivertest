@@ -3,14 +3,68 @@
         <!-- Latest compiled and minified CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
         <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
+
+      .chat
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat li
+{
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #B3A9A9;
+}
+
+.chat li.left .chat-body
+{
+    margin-left: 60px;
+}
+
+.chat li.right .chat-body
+{
+    margin-right: 60px;
+}
+
+
+.chat li .chat-body p
+{
+    margin: 0;
+    color: #777777;
+}
+
+.panel .slidedown .glyphicon, .chat .glyphicon
+{
+    margin-right: 5px;
+}
+
+.panel-body
+{
+    overflow-y: scroll;
+    height: 80%;
+}
+
+::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
+
+      
     </style>
 
         <!-- Latest compiled and minified JavaScript -->
@@ -20,23 +74,90 @@
     <body>
 
         <div class="container">    
-        <h1>HOME</h1>
-        <ul id="messages"></ul>
-        <form action="">
-            <input id="m" autocomplete="off" /><button>Send</button>
-        </form>
+        
+
+
+        <div class="container">
+    <div class="row">
+        <div class="col-md-7">
+            <div class="panel panel-primary">
+                <div class="panel-heading logined-as">
+                </div>
+                <div class="panel-body">
+                    <ul class="chat" id="messages">
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group" style="width:90%">
+                        <form action="#">
+                            <input id="m" class="form-control" placeholder="Type your message here..." type="text">
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-warning btn-sm" id="btn-chat">
+                                    Send</button>
+                            </span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Online Users
+                </div>
+                <div class="panel-body">
+                    <ul class="" id="users">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
         <script>
+            $.ajax({url: "/user/get", success: function(result){
+                socket.emit('add user', result.firstname+" "+result.lastname);
+                $(".logined-as").text(result.firstname+" "+result.lastname);
+               $('form').submit(function(){
+                    socket.emit('chat message', {user:result.firstname+" "+result.lastname, message:$('#m').val()});
+                    $('#m').val('');
+                    return false;
+                });
+                socket.on('chat message', function(msg){
+                    var message = '<li class="left clearfix">'
+                            + '<div class="chat-body clearfix">'
+                                + '<p><strong class="primary-font">'+msg.user+' : </strong>'+msg.message+'</p>'
+                            + '</div>'
+                        + '</li>';
+                    $('#messages').append(message);
+                });
+                // Whenever the server emits 'user joined', log it in the chat body
+                socket.on('user joined', function (data) {
+                    $("#users").html('');
+                    for(var u in data.onlineUsers) {
+                        var user = '<li>'
+                         + '<p><strong>'+u+'</p>'
+                        +'</li>';
+                        $("#users").append(user);
+                    }
+                });
+
+                socket.on('user left', function (data) {
+                    $("#users").html('');
+                    for(var u in data.onlineUsers) {
+                        var user = '<li>'
+                         + '<p><strong>'+u+'</p>'
+                        +'</li>';
+                        $("#users").append(user);
+                    }
+                });
+            }});
           var socket = io();
-          $('form').submit(function(){
-            socket.emit('chat message', $('#m').val());
-            $('#m').val('');
-            return false;
-          });
-          socket.on('chat message', function(msg){
-            $('#messages').append($('<li>').text(msg));
-          });
         </script>
     </div>
     
