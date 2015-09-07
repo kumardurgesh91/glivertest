@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 var orm = require('orm');
 
 
@@ -16,12 +17,14 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(session({secret: 'ssshhhhh'}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(orm.express("mysql://root:@localhost/glivertest", {
+app.use(orm.express("mysql://root:@localhost/hardik", {
     define: function (db, models, next) {
         models.users = db.define("users", {
             email      : String,
@@ -40,20 +43,32 @@ app.use(orm.express("mysql://root:@localhost/glivertest", {
 }));
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/views/index.html');
+  if(req.session.user) {
+    res.sendFile(__dirname + '/views/home.html');
+  } else {
+    res.sendFile(__dirname + '/views/index.html');
+  }
 });
 app.get('/signup', function(req, res){
-  res.sendFile(__dirname + '/views/signup.html');
+  if(req.session.user) {
+    res.sendFile(__dirname + '/views/home.html');
+  } else {
+    res.sendFile(__dirname + '/views/signup.html');
+  }
 });
 
+//login user
 app.post('/user/login', function(req, res){
   var email = req.body.email;
   var password = req.body.password;
   if(email && password) {
-    req.models.users.find({email:email, password:password}, function (err, user) {
-      if(err || !user) { console.log(err);
+    req.models.users.find({email:email, password:password}, 1, function (err, user) {
+      if(err || !user) { 
+        console.log(err);
         res.sendFile(__dirname + '/views/index.html');
       } else {
+        //creating session
+        req.session.user = user[0];
         res.sendFile(__dirname + '/views/home.html');
       }
     })
@@ -62,6 +77,7 @@ app.post('/user/login', function(req, res){
   }
 });
 
+//create user
 app.post('/user/create', function(req, res){
   var email = req.body.email;
   var firstname = req.body.firstname;
@@ -79,11 +95,27 @@ app.post('/user/create', function(req, res){
       res.sendFile(__dirname + '/views/signup.html');
     }
     else {
-      console.log(items);
       res.sendFile(__dirname + '/views/index.html')
     }
   });
 
+});
+
+//wild card get routing
+app.get('/*', function(req, res){
+  if(req.session.user) {
+    res.sendFile(__dirname + '/views/home.html');
+  } else {
+    res.sendFile(__dirname + '/views/index.html');
+  }
+});
+//wild card post routing
+app.post('/*', function(req, res){
+  if(req.session.user) {
+    res.sendFile(__dirname + '/views/home.html');
+  } else {
+    res.sendFile(__dirname + '/views/index.html');
+  }
 });
 
 // catch 404 and forward to error handler
