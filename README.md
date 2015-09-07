@@ -11,6 +11,6 @@ Express.js & MySql
 6. Create database with name glivertest.
 7. Create table with name "users" and following collumns : id, firstname, lastname, email and password. Ref: app.js line number 26. 
 8. Change database usename & password to MySql username & password in app.js line number 24.
-9. Execute command "npm start" in project folder, HTTP server will start at http://localhost:3000.
+9. Execute command "node app.js" in project folder, HTTP server will start at http://localhost:3000.
 
 
