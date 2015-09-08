@@ -87,6 +87,8 @@
                     <ul class="chat" id="messages">
                     </ul>
                 </div>
+                <div id="typing">
+                </div>
                 <div class="panel-footer">
                     <div class="input-group" style="width:90%">
                         <form action="#">
@@ -121,10 +123,11 @@
         <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
         <script>
             $.ajax({url: "/user/get", success: function(result){
-                socket.emit('add user', result.firstname+" "+result.lastname);
-                $(".logined-as").text(result.firstname+" "+result.lastname);
+                var username = result.firstname+" "+result.lastname;
+                socket.emit('add user', username);
+                $(".logined-as").text(username);
                $('form').submit(function(){
-                    socket.emit('chat message', {user:result.firstname+" "+result.lastname, message:$('#m').val()});
+                    socket.emit('chat message', {user:username, message:$('#m').val()});
                     $('#m').val('');
                     return false;
                 });
@@ -155,6 +158,45 @@
                         +'</li>';
                         $("#users").append(user);
                     }
+                });
+
+                socket.on('typing', function (data) {
+                    if(data != username) {
+                        var firstname = data.split(" ")[0];
+                        if($("#typing"+firstname).length == 0) {
+                            $("#typing").append("<p id='typing"+firstname+"'>"+data+" typing...</p>");
+                        } else {
+                            $("#typing"+firstname).html(username+" typing...");
+                        }
+                    }
+                });
+                socket.on('stop typing', function(data) {
+                    var firstname = data.split(" ")[0];
+                    $("#typing"+firstname).remove();
+                });
+
+                var typing = false;
+                var timeout = undefined;
+
+                function timeoutFunction(){
+                  typing = false;
+                  socket.emit("stop typing", username);
+                }
+
+                function onKeyDownNotEnter(){
+                  if(typing == false) {
+                    typing = true
+                    socket.emit("typing", username);
+                    timeout = setTimeout(timeoutFunction, 5000);
+                  } else {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(timeoutFunction, 5000);
+                  }
+
+                }
+                $('#m').on('keypress', function(){
+                    console.log("doen..");
+                    onKeyDownNotEnter();
                 });
             }});
           var socket = io();

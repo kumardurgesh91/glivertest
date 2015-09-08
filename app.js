@@ -154,17 +154,15 @@ io.on('connection', function(socket){
   });
 
   // when the client emits 'typing', we broadcast it to others
-  socket.on('typing', function () {
-    socket.broadcast.emit('typing', {
-      username: socket.username
-    });
+  socket.on('typing', function (username) {
+    console.log(username, "typing...");
+    io.emit('typing', username);
   });
 
   // when the client emits 'stop typing', we broadcast it to others
-  socket.on('stop typing', function () {
-    socket.broadcast.emit('stop typing', {
-      username: socket.username
-    });
+  socket.on('stop typing', function (username) {
+    console.log(username, "stop typing...");
+    io.emit('stop typing', username);
   });
 
   // when the user disconnects.. perform this
